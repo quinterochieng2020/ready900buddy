@@ -32,14 +32,22 @@
             _ => "MODE: Explain simply. Give a plain-language explanation in 3-5 sentences, 2-3 keyTerms, optionally a localExample, and one checkQuestion."
         };
 
-        static string LanguageRule(string lang) => lang switch
+        static string LanguageRule(string lang)
         {
-            "ss" => "Write the learner-facing text in siSwati. Keep Azure terms (e.g. virtual machine, availability zone) in English, with a short explanation beside them.",
-            "zu" => "Write the learner-facing text in isiZulu. Keep Azure terms in English, with a short explanation beside them.",
-            "sw" => "Write the learner-facing text in Kiswahili. Keep Azure terms in English, with a short explanation beside them.",
-            _ => "Write in clear English."
+            string? name = lang switch { "ss" => "siSwati", "zu" => "isiZulu", "sw" => "Kiswahili", _ => null };
+            if (name is null) return "Write in clear English.";
+            return $"LANGUAGE: Write every learner-facing field (explanation, localExample, keyTerms[].meaning, examTrap, checkQuestion) in {name}, even when the question is written in English. " +
+                   "Keep Azure terms in English, with a short explanation beside them. " +
+                   "Keep the JSON keys, keyTerms[].term and outlineSection in English. " +
+                   $"Never answer in English when {name} is requested.";
+        }
+        public static string UserSuffix(string lang) => lang switch
+        {
+            "ss" => "\n\n[Reply in siSwati. Azure terms stay in English.]",
+            "zu" => "\n\n[Reply in isiZulu. Azure terms stay in English.]",
+            "sw" => "\n\n[Reply in Kiswahili. Azure terms stay in English.]",
+            _ => ""
         };
-
         public static string Build(string mode, string lang) => $"{Base}\n\n{ModeRules(mode)}\n\n{LanguageRule(lang)}";
     }
 }

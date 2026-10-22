@@ -117,7 +117,7 @@ Errors: `{ "error": { "code": "...", "message": "..." }, "retryAfterSeconds": 10
 
 ## Tech stack
 
-**Frontend:** React, Vite, TypeScript, Tailwind CSS, shadcn/ui, TanStack Query, Framer Motion. The first version of the UI was built with Lovable, without Supabase or any Lovable backend.
+**Frontend:** React, Vite, TypeScript, Tailwind CSS, shadcn/ui, TanStack Query, Framer Motion. The first version of the UI was built with bolt, without Supabase or any bolt backend.
 
 **Backend:** C# / ASP.NET Core minimal API, built-in rate limiter, `IMemoryCache`, `IHttpClientFactory`, Docker.
 

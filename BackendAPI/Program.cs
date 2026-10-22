@@ -88,7 +88,7 @@ app.MapPost("/api/buddy/messages", async (BuddyRequest req, IMemoryCache cache, 
         ModelOutput o;
         try
         {
-            o = await llm.AskAsync(Prompts.Build(req.Mode, req.Language), history, msg, ct);
+            o = await llm.AskAsync(Prompts.Build(req.Mode, req.Language), history, msg + Prompts.UserSuffix(req.Language), ct);
         }
         catch (ApiException e) when (e.Code == "PROVIDER_ERROR" && cacheable && fallbacks.Find(req.Mode, req.Language, msg) is { } fb)
         {
