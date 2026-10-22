@@ -2,6 +2,7 @@ import { Cloud, Moon, Sun } from 'lucide-react';
 import { GlassCard } from '@/components/ui/glass-card';
 import { GlassButton } from '@/components/ui/glass-button';
 import { LANGUAGES, type BuddyLanguage } from '@/api/types';
+import { VoiceSelect } from '@/context/VoiceContext';
 import { cn } from '@/lib/utils';
 
 interface TopBarProps {
@@ -30,7 +31,8 @@ export function TopBar({ theme, onToggleTheme, language, onLanguageChange, onNew
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
+          <VoiceSelect />
           <LanguageSelect value={language} onChange={onLanguageChange} />
           <GlassButton
             variant="ghost"

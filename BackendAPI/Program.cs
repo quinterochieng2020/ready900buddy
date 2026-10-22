@@ -8,13 +8,26 @@ using System.Threading.RateLimiting;
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddMemoryCache();
-builder.Services.AddHttpClient<GeminiProvider>(c => c.Timeout = TimeSpan.FromSeconds(25));
-builder.Services.AddHttpClient<OpenRouterProvider>(c => c.Timeout = TimeSpan.FromSeconds(25));
+builder.Services.AddHttpClient<GeminiProvider>(c => c.Timeout = TimeSpan.FromSeconds(15));
 // Order matters: Gemini first, OpenRouter fallback
 builder.Services.AddTransient<ILlmProvider>(sp => sp.GetRequiredService<GeminiProvider>());
-builder.Services.AddTransient<ILlmProvider>(sp => sp.GetRequiredService<OpenRouterProvider>());
+builder.Services.AddSingleton<StaticFallbacks>();
 builder.Services.AddScoped<LlmService>();
 builder.Services.AddSingleton<DailyBudget>();
+var compat = builder.Configuration.GetSection("OpenAiCompat").GetChildren()
+    .Select(c => new CompatSettings(c["Name"] ?? "", c["BaseUrl"] ?? "", c["ApiKey"] ?? "", c["Model"] ?? ""))
+    .Where(s => s.Name != "" && s.ApiKey != "" && s.Model != "")   // unconfigured providers are skipped
+    .ToList();
+
+foreach (var s in compat)
+{
+    builder.Services.AddHttpClient("llm-" + s.Name, c => c.Timeout = TimeSpan.FromSeconds(15));
+    builder.Services.AddTransient<ILlmProvider>(sp => new OpenAiCompatProvider(
+        sp.GetRequiredService<IHttpClientFactory>().CreateClient("llm-" + s.Name),
+        s,
+        sp.GetRequiredService<ILoggerFactory>().CreateLogger("llm." + s.Name)));
+}
+
 
 var origins = builder.Configuration["Cors:Origins"]?.Split(',', StringSplitOptions.RemoveEmptyEntries) ?? ["http://localhost:5173"];
 builder.Services.AddCors(o => o.AddDefaultPolicy(p => p.WithOrigins(origins).AllowAnyHeader().AllowAnyMethod()));
@@ -51,7 +64,7 @@ app.UseRateLimiter();
 
 app.MapGet("/health", () => Results.Ok(new { status = "ok" }));
 
-app.MapPost("/api/buddy/messages", async (BuddyRequest req, IMemoryCache cache, LlmService llm, DailyBudget budget, CancellationToken ct) =>
+app.MapPost("/api/buddy/messages", async (BuddyRequest req, IMemoryCache cache, LlmService llm, DailyBudget budget, StaticFallbacks fallbacks, CancellationToken ct) =>
 {
     try
     {
@@ -71,10 +84,20 @@ app.MapPost("/api/buddy/messages", async (BuddyRequest req, IMemoryCache cache, 
         if (cacheable && cache.TryGetValue(cacheKey, out BuddyReply? hit) && hit is not null)
             return Results.Ok(hit with { ConversationId = convId, Cached = true });
 
+        
+        ModelOutput o;
+        try
+        {
+            o = await llm.AskAsync(Prompts.Build(req.Mode, req.Language), history, msg, ct);
+        }
+        catch (ApiException e) when (e.Code == "PROVIDER_ERROR" && cacheable && fallbacks.Find(req.Mode, req.Language, msg) is { } fb)
+        {
+            return Results.Ok(new BuddyReply(convId, req.Mode, fb.Explanation, fb.LocalExample, fb.KeyTerms ?? new(),
+                fb.ExamTrap, fb.CheckQuestion, fb.OutlineSection, true));
+        }
         if (!budget.TryConsume())
             throw new ApiException(429, "DAILY_LIMIT", "The buddy has hit its daily limit. Please come back tomorrow.");
 
-        var o = await llm.AskAsync(Prompts.Build(req.Mode, req.Language), history, msg, ct);
 
         if (o.OffTopic)
             throw new ApiException(422, "OFF_TOPIC", string.IsNullOrWhiteSpace(o.Explanation)

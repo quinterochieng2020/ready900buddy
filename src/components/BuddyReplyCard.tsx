@@ -7,6 +7,7 @@ import { GlassButton } from '@/components/ui/glass-button';
 import { KeyTermChips } from './KeyTermChips';
 import { Avatar } from './TypingIndicator';
 import { cn } from '@/lib/utils';
+import { useVoice } from '@/context/VoiceContext';
 
 interface BuddyReplyCardProps {
   reply: BuddyReply;
@@ -18,6 +19,7 @@ export function BuddyReplyCard({ reply, language, onCheckQuestion }: BuddyReplyC
   const [listening, setListening] = useState(false);
   const [activeSentence, setActiveSentence] = useState<number | null>(null);
   const isSocratic = reply.mode === 'socratic';
+  const { hasNativeVoice } = useVoice();
 
   return (
     <motion.div
@@ -42,14 +44,19 @@ export function BuddyReplyCard({ reply, language, onCheckQuestion }: BuddyReplyC
                 </Badge>
               )}
             </div>
-            <ListenControl
-              text={reply.explanation}
-              language={language}
-              listening={listening}
-              setListening={setListening}
-              activeSentence={activeSentence}
-              setActiveSentence={setActiveSentence}
-            />
+            {hasNativeVoice && (
+              <ListenControl
+                text={reply.explanation}
+                listening={listening}
+                setListening={setListening}
+                setActiveSentence={setActiveSentence}
+              />
+            )}
+            {!hasNativeVoice && language !== 'en' && (
+              <span className="text-[11px] text-muted-foreground">
+                Audio isn't available for this language on your device.
+              </span>
+            )}
           </div>
 
           <p className="whitespace-pre-wrap break-words text-sm leading-relaxed">
@@ -137,24 +144,20 @@ function Badge({
 
 interface ListenControlProps {
   text: string;
-  language: BuddyLanguage;
   listening: boolean;
   setListening: (v: boolean) => void;
-  activeSentence: number | null;
   setActiveSentence: (v: number | null) => void;
 }
 
 function ListenControl({
   text,
-  language,
   listening,
   setListening,
-  activeSentence,
   setActiveSentence,
 }: ListenControlProps) {
+  const { selectedVoice } = useVoice();
   const [paused, setPaused] = useState(false);
   const [speed, setSpeed] = useState<1 | 0.8 | 1.2>(1);
-  const [usedFallback, setUsedFallback] = useState(false);
   const sentences = splitSentences(text);
 
   const stop = () => {
@@ -172,16 +175,12 @@ function ListenControl({
     if (!window.speechSynthesis) return;
     window.speechSynthesis.cancel();
 
-    const all = window.speechSynthesis.getVoices();
-    const hints = LANG_HINT[language];
-    const voice =
-      all.find((v) => hints.some((h) => v.lang?.toLowerCase().startsWith(h))) ?? null;
-    setUsedFallback(voice === null);
-
     sentences.forEach((sentence, i) => {
       const u = new SpeechSynthesisUtterance(sentence);
       u.rate = speed;
-      if (voice) u.voice = voice;
+      if (selectedVoice) {
+        u.voice = selectedVoice;
+      }
       u.onstart = () => setActiveSentence(i);
       u.onend = () => {
         if (i === sentences.length - 1) {
@@ -234,21 +233,10 @@ function ListenControl({
           {speed}x
         </button>
       )}
-      {listening && usedFallback && (
-        <span className="text-[11px] text-muted-foreground">
-          No voice for this language on your device, reading with a default voice.
-        </span>
-      )}
+      
     </div>
   );
 }
-
-const LANG_HINT: Record<BuddyLanguage, string[]> = {
-  en: ['en'],
-  ss: ['ss'],
-  zu: ['zu'],
-  sw: ['sw'],
-};
 
 function splitSentences(text: string): string[] {
   const cleaned = text.replace(/\s+/g, ' ').trim();

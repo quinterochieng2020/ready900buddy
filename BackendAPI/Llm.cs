@@ -1,9 +1,11 @@
 ﻿using BackendAPI.Models;
+using System.Collections.Concurrent;
 using System.Text;
 using System.Text.Json;
 
 namespace BackendAPI
 {
+    public record CompatSettings(string Name, string BaseUrl, string ApiKey, string Model);
     public interface ILlmProvider
     {
         string Name { get; }
@@ -24,7 +26,7 @@ namespace BackendAPI
             {
                 systemInstruction = new { parts = new[] { new { text = system } } },
                 contents,
-                generationConfig = new { responseMimeType = "application/json", maxOutputTokens = 800, temperature = 0.4 }
+                generationConfig = new { responseMimeType = "application/json", maxOutputTokens = 2500, temperature = 0.4 }
             };
 
             using var req = new HttpRequestMessage(HttpMethod.Post,
@@ -39,9 +41,9 @@ namespace BackendAPI
         }
     }
 
-    public class OpenRouterProvider(HttpClient http, IConfiguration cfg, ILogger<OpenRouterProvider> log) : ILlmProvider
+    public class OpenAiCompatProvider(HttpClient http, CompatSettings s, ILogger log) : ILlmProvider
     {
-        public string Name => "openrouter";
+        public string Name => s.Name;
 
         public async Task<string> CompleteAsync(string system, IReadOnlyList<ChatTurn> history, string userMessage, CancellationToken ct)
         {
@@ -51,16 +53,16 @@ namespace BackendAPI
 
             var body = new
             {
-                model = cfg["OpenRouter:Model"] ?? throw new InvalidOperationException("OpenRouter:Model not set"),
+                model = s.Model,
                 messages,
-                max_tokens = 800,
+                max_tokens = 2500,
                 temperature = 0.4,
                 response_format = new { type = "json_object" }
             };
 
-            using var req = new HttpRequestMessage(HttpMethod.Post, "https://openrouter.ai/api/v1/chat/completions")
+            using var req = new HttpRequestMessage(HttpMethod.Post, s.BaseUrl.TrimEnd('/') + "/chat/completions")
             { Content = new StringContent(JsonSerializer.Serialize(body), Encoding.UTF8, "application/json") };
-            req.Headers.Authorization = new("Bearer", cfg["OpenRouter:ApiKey"]);
+            req.Headers.Authorization = new("Bearer", s.ApiKey);
 
             var json = await LlmHttp.SendForStringAsync(http, req, log, Name, ct);
 
@@ -84,10 +86,14 @@ namespace BackendAPI
     public class LlmService(IEnumerable<ILlmProvider> providers, ILogger<LlmService> log)
     {
         static readonly JsonSerializerOptions Json = new() { PropertyNameCaseInsensitive = true };
-
+        static readonly ConcurrentDictionary<string, DateTime> SkipUntil = new();
         public async Task<ModelOutput> AskAsync(string system, IReadOnlyList<ChatTurn> history, string message, CancellationToken ct)
         {
-            foreach (var p in providers)
+            var all = providers.ToList();
+            var active = all.Where(p => !SkipUntil.TryGetValue(p.Name, out var u) || u <= DateTime.UtcNow).ToList();
+            if (active.Count == 0) { SkipUntil.Clear(); active = all; }   // never refuse without trying
+
+            foreach (var p in active)
             {
                 try
                 {
@@ -97,9 +103,10 @@ namespace BackendAPI
                     return JsonSerializer.Deserialize<ModelOutput>(raw, Json)
                            ?? throw new JsonException("Empty model output");
                 }
-                catch (Exception ex) when (ex is HttpRequestException or JsonException or TaskCanceledException or KeyNotFoundException)
+                catch (Exception ex) when (!ct.IsCancellationRequested)
                 {
-                    log.LogWarning(ex, "Provider {Provider} failed, trying next", p.Name);
+                    SkipUntil[p.Name] = DateTime.UtcNow.AddSeconds(30);
+                    log.LogWarning(ex, "Provider {Provider} failed, skipping it for 30s", p.Name);
                 }
             }
             throw new ApiException(502, "PROVIDER_ERROR", "The buddy is having trouble right now. Please try again.");

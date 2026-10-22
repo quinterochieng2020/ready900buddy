@@ -1,0 +1,226 @@
+{
+  "simple|en|What is high availability?": {
+    "explanation": "High availability means keeping a service running with very little downtime, even when something fails. In Azure this is done by removing single points of failure: you spread workloads across multiple machines, zones, or regions, and add health checks so a broken piece is skipped automatically. The goal is not 'never goes down'. It is 'stays up almost all the time and recovers fast'.",
+    "localExample": null,
+    "keyTerms": [
+      { "term": "SLA", "meaning": "Service Level Agreement: the % uptime a provider promises, e.g. 99.9%." },
+      { "term": "Redundancy", "meaning": "Having spare copies of a component so one failure does not stop the service." },
+      { "term": "Failover", "meaning": "Automatically switching to a healthy copy when the primary one fails." }
+    ],
+    "examTrap": null,
+    "checkQuestion": "A service runs on one server. What could you add so it keeps working if that server fails?",
+    "outlineSection": "Describe cloud concepts > Describe the benefits of using cloud services (high availability and scalability)"
+  },
+  "local|en|What is high availability?": {
+    "explanation": "High availability means keeping a service running with very little downtime, even when something fails. In Azure this is done by removing single points of failure: you spread workloads across multiple machines, zones, or regions, and add health checks so a broken piece is skipped automatically.",
+    "localExample": "Think of load-shedding in many South African towns. If a whole suburb depends on one substation, a single trip leaves everyone in the dark. But if your area is fed from two substations with an automatic switch-over, one can fail and your lights only flicker. That redundancy is exactly what high availability adds to a cloud service.",
+    "keyTerms": [
+      { "term": "SLA", "meaning": "Service Level Agreement: the % uptime a provider promises, e.g. 99.9%." },
+      { "term": "Redundancy", "meaning": "Having spare copies of a component so one failure does not stop the service." },
+      { "term": "Failover", "meaning": "Automatically switching to a healthy copy when the primary one fails." }
+    ],
+    "examTrap": null,
+    "checkQuestion": "A service runs on one server. What could you add so it keeps working if that server fails?",
+    "outlineSection": "Describe cloud concepts > Describe the benefits of using cloud services (high availability and scalability)"
+  },
+  "exam|en|What is high availability?": {
+    "explanation": "High availability means a service stays up with very little downtime, even when parts of it fail. On the exam, think redundancy: multiple instances, multiple zones, and automatic failover. The uptime promise is written as an SLA percentage.",
+    "localExample": null,
+    "keyTerms": [
+      { "term": "SLA", "meaning": "Service Level Agreement: the % uptime a provider promises, e.g. 99.9%." },
+      { "term": "Redundancy", "meaning": "Having spare copies of a component so one failure does not stop the service." },
+      { "term": "Failover", "meaning": "Automatically switching to a healthy copy when the primary one fails." }
+    ],
+    "examTrap": "High availability is about staying up during failures. Disaster recovery is about recovering after a big disaster. They sound alike but answer different questions: resisting failure versus recovering from it.",
+    "checkQuestion": "A service runs on one server. What could you add so it keeps working if that server fails?",
+    "outlineSection": "Describe cloud concepts > Describe the benefits of using cloud services (high availability and scalability)"
+  },
+  "socratic|en|What is high availability?": {
+    "explanation": "If a service runs on one machine and that machine dies, what happens to the users? What would you add to change that outcome?",
+    "localExample": null,
+    "keyTerms": [],
+    "examTrap": null,
+    "checkQuestion": null,
+    "outlineSection": null
+  },
+
+  "simple|en|Explain scalability vs elasticity": {
+    "explanation": "Scalability is the ability to handle more or less load by adding resources. Elasticity is a special kind of scalability: it adds resources automatically when demand rises and removes them when it falls, so you only pay for what you need right now. Scalable means 'can grow'. Elastic means 'grows and shrinks on its own'.",
+    "localExample": null,
+    "keyTerms": [
+      { "term": "Scale up", "meaning": "A bigger machine (more CPU/RAM). Also called vertical scaling." },
+      { "term": "Scale out", "meaning": "More machines side by side. Also called horizontal scaling." },
+      { "term": "Autoscale", "meaning": "Rules that add or remove instances based on metrics like CPU." }
+    ],
+    "examTrap": null,
+    "checkQuestion": "A shop adds one more teller during the lunch rush, then sends them home at 3pm. Is that scalability or elasticity?",
+    "outlineSection": "Describe cloud concepts > Describe the benefits of using cloud services (high availability and scalability)"
+  },
+  "local|en|Explain scalability vs elasticity": {
+    "explanation": "Scalability is the ability to handle more or less load by adding resources. Elasticity is scalability that happens automatically: resources are added when demand rises and removed when it falls.",
+    "localExample": "Think of mobile money on payday. On the 25th of each month, millions of people send money at once. An elastic system spins up extra servers for those few hours, then drops them again that night. A merely scalable system could handle the rush too, but you would have to buy and keep those servers all month, which is wasteful on quiet days.",
+    "keyTerms": [
+      { "term": "Scale up", "meaning": "A bigger machine (more CPU/RAM). Also called vertical scaling." },
+      { "term": "Scale out", "meaning": "More machines side by side. Also called horizontal scaling." },
+      { "term": "Autoscale", "meaning": "Rules that add or remove instances based on metrics like CPU." }
+    ],
+    "examTrap": null,
+    "checkQuestion": "A shop adds one more teller during the lunch rush, then sends them home at 3pm. Is that scalability or elasticity?",
+    "outlineSection": "Describe cloud concepts > Describe the benefits of using cloud services (high availability and scalability)"
+  },
+  "exam|en|Explain scalability vs elasticity": {
+    "explanation": "Scalability means you can add or remove resources to match load. Elasticity means that adjustment happens automatically as demand changes. Scaling up makes one machine bigger. Scaling out adds more machines.",
+    "localExample": null,
+    "keyTerms": [
+      { "term": "Scale up", "meaning": "A bigger machine (more CPU/RAM). Also called vertical scaling." },
+      { "term": "Scale out", "meaning": "More machines side by side. Also called horizontal scaling." },
+      { "term": "Autoscale", "meaning": "Rules that add or remove instances based on metrics like CPU." }
+    ],
+    "examTrap": "Scaling up (a bigger VM) is not the same as scaling out (more VMs). Scaling up has a hard ceiling and no failover. Scaling out gives you both more capacity and better availability.",
+    "checkQuestion": "A shop adds one more teller during the lunch rush, then sends them home at 3pm. Is that scalability or elasticity?",
+    "outlineSection": "Describe cloud concepts > Describe the benefits of using cloud services (high availability and scalability)"
+  },
+  "socratic|en|Explain scalability vs elasticity": {
+    "explanation": "If you buy 10 servers for the busy season but keep all 10 running during the quiet season, what are you wasting? What would let you avoid that?",
+    "localExample": null,
+    "keyTerms": [],
+    "examTrap": null,
+    "checkQuestion": null,
+    "outlineSection": null
+  },
+
+  "simple|en|IaaS vs PaaS vs SaaS?": {
+    "explanation": "These are three layers of cloud service. IaaS (Infrastructure as a Service) gives you raw machines and networking, and you install and look after the operating system and apps. PaaS (Platform as a Service) gives you a ready runtime, so you only bring your code and data while the provider runs the OS and servers. SaaS (Software as a Service) is a finished app you just use, like webmail. The more the provider handles, the less you manage.",
+    "localExample": null,
+    "keyTerms": [
+      { "term": "IaaS", "meaning": "You manage the OS and apps; the provider manages hardware and network. e.g. Azure Virtual Machines." },
+      { "term": "PaaS", "meaning": "You manage apps and data only; the provider manages the OS and servers. e.g. Azure App Service." },
+      { "term": "SaaS", "meaning": "The provider manages everything; you just use the app. e.g. Microsoft 365." }
+    ],
+    "examTrap": null,
+    "checkQuestion": "You deploy a web app to Azure App Service and never touch Windows updates. Which model is that, and why?",
+    "outlineSection": "Describe cloud concepts > Describe cloud service types (IaaS, PaaS, SaaS)"
+  },
+  "local|en|IaaS vs PaaS vs SaaS?": {
+    "explanation": "IaaS, PaaS and SaaS are three levels of cloud service. The further along you go, the more the provider looks after and the less you manage yourself.",
+    "localExample": "Picture a spaza shop. IaaS is renting an empty stall: you bring the shelves and the stock, and do everything yourself. PaaS is renting a stall that already has shelves and a fridge: you just bring your stock and sell. SaaS is a fully running tuck shop: you walk in and buy a cool drink, and someone else runs the whole thing.",
+    "keyTerms": [
+      { "term": "IaaS", "meaning": "You manage the OS and apps; the provider manages hardware and network. e.g. Azure Virtual Machines." },
+      { "term": "PaaS", "meaning": "You manage apps and data only; the provider manages the OS and servers. e.g. Azure App Service." },
+      { "term": "SaaS", "meaning": "The provider manages everything; you just use the app. e.g. Microsoft 365." }
+    ],
+    "examTrap": null,
+    "checkQuestion": "You deploy a web app to Azure App Service and never touch Windows updates. Which model is that, and why?",
+    "outlineSection": "Describe cloud concepts > Describe cloud service types (IaaS, PaaS, SaaS)"
+  },
+  "exam|en|IaaS vs PaaS vs SaaS?": {
+    "explanation": "IaaS gives you virtual machines and networking, PaaS gives you a managed platform for your code, and SaaS is a finished application. Match the model to how much the customer wants to manage.",
+    "localExample": null,
+    "keyTerms": [
+      { "term": "IaaS", "meaning": "You manage the OS and apps; the provider manages hardware and network. e.g. Azure Virtual Machines." },
+      { "term": "PaaS", "meaning": "You manage apps and data only; the provider manages the OS and servers. e.g. Azure App Service." },
+      { "term": "SaaS", "meaning": "The provider manages everything; you just use the app. e.g. Microsoft 365." }
+    ],
+    "examTrap": "Responsibility shifts with the model. In IaaS you patch the OS. In PaaS the provider patches it. Many candidates flip this.",
+    "checkQuestion": "You deploy a web app to Azure App Service and never touch Windows updates. Which model is that, and why?",
+    "outlineSection": "Describe cloud concepts > Describe cloud service types (IaaS, PaaS, SaaS)"
+  },
+  "socratic|en|IaaS vs PaaS vs SaaS?": {
+    "explanation": "If you only want to write code and never patch an operating system, which service model fits, and which one would force you to patch it yourself?",
+    "localExample": null,
+    "keyTerms": [],
+    "examTrap": null,
+    "checkQuestion": null,
+    "outlineSection": null
+  },
+
+  "simple|en|What is an availability zone?": {
+    "explanation": "An availability zone is a separate physical location inside one Azure region, with its own power, cooling, and network. Zones are far enough apart that a flood or fire in one is unlikely to hit another, but close enough for fast replication. Putting your workload across two or three zones protects you from a single datacenter failure while staying in the same region.",
+    "localExample": null,
+    "keyTerms": [
+      { "term": "Region", "meaning": "A geographic area with one or more datacenters, e.g. South Africa North." },
+      { "term": "Availability Zone", "meaning": "An independent datacenter location within a region, with its own power, cooling, and network." },
+      { "term": "Zone-redundant", "meaning": "A service that automatically spreads across multiple zones." }
+    ],
+    "examTrap": null,
+    "checkQuestion": "A flood knocks out one datacenter in a region. Your app is zone-redundant across three zones. What happens to users?",
+    "outlineSection": "Describe Azure architecture and services > Describe the core architectural components of Azure (regions and availability zones)"
+  },
+  "local|en|What is an availability zone?": {
+    "explanation": "An availability zone is a separate physical location inside one Azure region, with its own power, cooling, and network. Spreading your app across zones keeps it running if one location fails.",
+    "localExample": "Think of a big hospital in a city with three campuses, each with its own generators and water tanks, a few kilometres apart. If one campus loses power, patients are moved to the other two without flying to another city. The campuses are the zones and the city is the region.",
+    "keyTerms": [
+      { "term": "Region", "meaning": "A geographic area with one or more datacenters, e.g. South Africa North." },
+      { "term": "Availability Zone", "meaning": "An independent datacenter location within a region, with its own power, cooling, and network." },
+      { "term": "Zone-redundant", "meaning": "A service that automatically spreads across multiple zones." }
+    ],
+    "examTrap": null,
+    "checkQuestion": "A flood knocks out one datacenter in a region. Your app is zone-redundant across three zones. What happens to users?",
+    "outlineSection": "Describe Azure architecture and services > Describe the core architectural components of Azure (regions and availability zones)"
+  },
+  "exam|en|What is an availability zone?": {
+    "explanation": "An availability zone is an independent datacenter location inside an Azure region, with its own power, cooling, and networking. Zones protect against a single datacenter failure within a region.",
+    "localExample": null,
+    "keyTerms": [
+      { "term": "Region", "meaning": "A geographic area with one or more datacenters, e.g. South Africa North." },
+      { "term": "Availability Zone", "meaning": "An independent datacenter location within a region, with its own power, cooling, and network." },
+      { "term": "Zone-redundant", "meaning": "A service that automatically spreads across multiple zones." }
+    ],
+    "examTrap": "Availability zones live inside a region. They do not replace regions. To survive a whole region going down you need region pairs, not zones.",
+    "checkQuestion": "A flood knocks out one datacenter in a region. Your app is zone-redundant across three zones. What happens to users?",
+    "outlineSection": "Describe Azure architecture and services > Describe the core architectural components of Azure (regions and availability zones)"
+  },
+  "socratic|en|What is an availability zone?": {
+    "explanation": "If two datacenters share one power grid, does losing that grid take out both? What does that tell you about how zones should be built?",
+    "localExample": null,
+    "keyTerms": [],
+    "examTrap": null,
+    "checkQuestion": null,
+    "outlineSection": null
+  },
+
+  "simple|en|What does the shared responsibility model mean?": {
+    "explanation": "The shared responsibility model says the cloud provider and the customer each own different layers of security and management. The provider always owns the physical datacenter, network, and host hardware. What you own depends on the service model: with IaaS you own the OS and everything above it, with PaaS you own your app and data, and with SaaS you mostly own your data and who can access it. Your data and access are always your responsibility.",
+    "localExample": null,
+    "keyTerms": [
+      { "term": "Provider responsibilities", "meaning": "The datacenter, network, physical hosts, and (for PaaS and SaaS) the OS." },
+      { "term": "Customer responsibilities", "meaning": "Your data, access, and identities, and (for IaaS) the OS and patches." },
+      { "term": "Always yours", "meaning": "Your data and who can reach it. This never moves to the provider." }
+    ],
+    "examTrap": null,
+    "checkQuestion": "You store files in Azure Blob Storage. Who is responsible for deciding who can read those files?",
+    "outlineSection": "Describe cloud concepts > Describe the shared responsibility model"
+  },
+  "local|en|What does the shared responsibility model mean?": {
+    "explanation": "The shared responsibility model splits the work between the cloud provider and you. The provider looks after the physical datacenter, and you always look after your own data and who can access it.",
+    "localExample": "It is like renting a flat. The landlord fixes the building, plumbing, and roof (the provider). But you lock your own door, decide who gets a key, and keep your valuables safe (your data and access). Even in a hotel (SaaS), you still lock your room and guard your suitcase.",
+    "keyTerms": [
+      { "term": "Provider responsibilities", "meaning": "The datacenter, network, physical hosts, and (for PaaS and SaaS) the OS." },
+      { "term": "Customer responsibilities", "meaning": "Your data, access, and identities, and (for IaaS) the OS and patches." },
+      { "term": "Always yours", "meaning": "Your data and who can reach it. This never moves to the provider." }
+    ],
+    "examTrap": null,
+    "checkQuestion": "You store files in Azure Blob Storage. Who is responsible for deciding who can read those files?",
+    "outlineSection": "Describe cloud concepts > Describe the shared responsibility model"
+  },
+  "exam|en|What does the shared responsibility model mean?": {
+    "explanation": "The provider secures the cloud itself (datacenters, network, hosts). You secure what you put in the cloud. How much falls on you depends on whether you use IaaS, PaaS, or SaaS.",
+    "localExample": null,
+    "keyTerms": [
+      { "term": "Provider responsibilities", "meaning": "The datacenter, network, physical hosts, and (for PaaS and SaaS) the OS." },
+      { "term": "Customer responsibilities", "meaning": "Your data, access, and identities, and (for IaaS) the OS and patches." },
+      { "term": "Always yours", "meaning": "Your data and who can reach it. This never moves to the provider." }
+    ],
+    "examTrap": "'The cloud is secure, so I am secure' is the classic trap. The provider secures the cloud, and you secure what is in it. A misconfigured storage account is still your problem.",
+    "checkQuestion": "You store files in Azure Blob Storage. Who is responsible for deciding who can read those files?",
+    "outlineSection": "Describe cloud concepts > Describe the shared responsibility model"
+  },
+  "socratic|en|What does the shared responsibility model mean?": {
+    "explanation": "If a thief uses a house key you leaked, is that the landlord's fault or yours? How does that map to data stored in the cloud?",
+    "localExample": null,
+    "keyTerms": [],
+    "examTrap": null,
+    "checkQuestion": null,
+    "outlineSection": null
+  }
+}
