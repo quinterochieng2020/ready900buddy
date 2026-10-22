@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatePresence } from 'framer-motion';
 import type { ApiError, BuddyLanguage, BuddyReply, ChatTurn } from '@/api/types';
 import { UserBubble } from './UserBubble';
 import { BuddyReplyCard } from './BuddyReplyCard';
@@ -42,8 +42,17 @@ export function ChatList({
             return <UserBubble key={`u-${i}`} text={turn.content} />;
           }
           assistantCount += 1;
-          const reply = replies[assistantCount];
-          if (!reply) return null;
+          const reply = replies[assistantCount] ?? {
+            conversationId: '',
+            mode: 'simple',
+            explanation: turn.content,
+            localExample: null,
+            keyTerms: [],
+            examTrap: null,
+            checkQuestion: null,
+            outlineSection: null,
+            cached: false,
+          };
           return (
             <BuddyReplyCard
               key={`a-${i}`}

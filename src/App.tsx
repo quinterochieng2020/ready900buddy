@@ -27,7 +27,6 @@ function Ready900Buddy() {
   const chat = useChatHistory();
   const buddy = useBuddy();
 
-  const [replies, setReplies] = useState<BuddyReply[]>([]);
   const [error, setError] = useState<ApiError | null>(null);
   const [countdown, setCountdown] = useState(0);
   const [pendingText, setPendingText] = useState<string | null>(null);
@@ -71,7 +70,7 @@ function Ready900Buddy() {
         {
           onSuccess: (reply) => {
             chat.setConversationId(reply.conversationId);
-            setReplies((r) => [...r, reply]);
+            chat.addReply(reply);
             chat.addTurn({ role: 'assistant', content: reply.explanation });
             setPendingText(null);
             setError(null);
@@ -112,7 +111,7 @@ function Ready900Buddy() {
       {
         onSuccess: (reply) => {
           chat.setConversationId(reply.conversationId);
-          setReplies((r) => [...r, reply]);
+          chat.addReply(reply);
           chat.addTurn({ role: 'assistant', content: reply.explanation });
           setPendingText(null);
           setError(null);
@@ -130,7 +129,6 @@ function Ready900Buddy() {
 
   const handleNewChat = useCallback(() => {
     chat.newChat();
-    setReplies([]);
     setError(null);
     setPendingText(null);
     setCountdown(0);
@@ -171,7 +169,7 @@ function Ready900Buddy() {
           ) : (
             <ChatList
               history={chat.history}
-              replies={replies}
+              replies={chat.replies}
               pendingText={pendingText}
               error={error}
               language={chat.language}

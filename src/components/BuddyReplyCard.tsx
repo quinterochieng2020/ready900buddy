@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from 'react';
 import { motion } from 'framer-motion';
 import { AlertTriangle, BookOpen, HelpCircle, MapPin, Zap } from 'lucide-react';
 import type { BuddyLanguage, BuddyReply } from '@/api/types';
@@ -16,10 +16,20 @@ interface BuddyReplyCardProps {
 }
 
 export function BuddyReplyCard({ reply, language, onCheckQuestion }: BuddyReplyCardProps) {
+  const cardId = useId();
   const [listening, setListening] = useState(false);
   const [activeSentence, setActiveSentence] = useState<number | null>(null);
   const isSocratic = reply.mode === 'socratic';
   const { hasNativeVoice } = useVoice();
+
+  // Stop playback if the user switches language
+  useEffect(() => {
+    if (listening) {
+      if (window.speechSynthesis) window.speechSynthesis.cancel();
+      setListening(false);
+      setActiveSentence(null);
+    }
+  }, [language]);
 
   return (
     <motion.div
@@ -46,9 +56,11 @@ export function BuddyReplyCard({ reply, language, onCheckQuestion }: BuddyReplyC
             </div>
             {hasNativeVoice && (
               <ListenControl
+                cardId={cardId}
                 text={reply.explanation}
                 listening={listening}
                 setListening={setListening}
+                activeSentence={activeSentence}
                 setActiveSentence={setActiveSentence}
               />
             )}
@@ -143,60 +155,142 @@ function Badge({
 }
 
 interface ListenControlProps {
+  cardId: string;
   text: string;
   listening: boolean;
   setListening: (v: boolean) => void;
+  activeSentence: number | null;
   setActiveSentence: (v: number | null) => void;
 }
 
 function ListenControl({
+  cardId,
   text,
   listening,
   setListening,
+  activeSentence,
   setActiveSentence,
 }: ListenControlProps) {
   const { selectedVoice } = useVoice();
   const [paused, setPaused] = useState(false);
   const [speed, setSpeed] = useState<1 | 0.8 | 1.2>(1);
-  const sentences = splitSentences(text);
+  const sentences = useMemo(() => splitSentences(text), [text]);
+  const runIdRef = useRef(0);
+  const prevVoiceURIRef = useRef(selectedVoice?.voiceURI);
 
-  const stop = () => {
+  const stop = useCallback(() => {
+    runIdRef.current += 1;
     if (window.speechSynthesis) window.speechSynthesis.cancel();
     setListening(false);
     setPaused(false);
     setActiveSentence(null);
-  };
+  }, [setListening, setActiveSentence]);
 
-  const speak = () => {
+  const playFromSentence = useCallback(
+    (startIdx: number, voice: SpeechSynthesisVoice | null, spd: number) => {
+      if (!window.speechSynthesis) return;
+
+      runIdRef.current += 1;
+      const currentRunId = runIdRef.current;
+
+      if (window.speechSynthesis.paused) {
+        window.speechSynthesis.resume();
+      }
+      window.speechSynthesis.cancel();
+
+      const remaining = sentences.slice(startIdx);
+      if (remaining.length === 0) {
+        setListening(false);
+        setPaused(false);
+        setActiveSentence(null);
+        return;
+      }
+
+      remaining.forEach((sentence, offset) => {
+        const idx = startIdx + offset;
+        const u = new SpeechSynthesisUtterance(sentence);
+        u.rate = spd;
+        if (voice) {
+          u.voice = voice;
+          u.lang = voice.lang;
+        }
+        u.onstart = () => {
+          if (runIdRef.current === currentRunId) {
+            setActiveSentence(idx);
+          }
+        };
+        u.onend = () => {
+          if (runIdRef.current !== currentRunId) return;
+          if (idx === sentences.length - 1) {
+            setListening(false);
+            setPaused(false);
+            setActiveSentence(null);
+          }
+        };
+        u.onerror = (e) => {
+          if (runIdRef.current !== currentRunId) return;
+          if (e.error === 'canceled' || e.error === 'interrupted') return;
+          setListening(false);
+          setPaused(false);
+          setActiveSentence(null);
+        };
+        window.speechSynthesis.speak(u);
+      });
+
+      setListening(true);
+      setPaused(false);
+    },
+    [sentences, setActiveSentence, setListening],
+  );
+
+  const speak = useCallback(() => {
     if (listening) {
       stop();
       return;
     }
-    if (!window.speechSynthesis) return;
-    window.speechSynthesis.cancel();
+    // Stop any other active cards
+    window.dispatchEvent(new CustomEvent('ready900-audio-start', { detail: { id: cardId } }));
+    playFromSentence(0, selectedVoice, speed);
+  }, [listening, stop, cardId, playFromSentence, selectedVoice, speed]);
 
-    sentences.forEach((sentence, i) => {
-      const u = new SpeechSynthesisUtterance(sentence);
-      u.rate = speed;
-      if (selectedVoice) {
-        u.voice = selectedVoice;
+  // When voice changes while listening: stop previous audio and immediately resume with selected voice
+  useEffect(() => {
+    const prevURI = prevVoiceURIRef.current;
+    prevVoiceURIRef.current = selectedVoice?.voiceURI;
+
+    if (prevURI && selectedVoice && prevURI !== selectedVoice.voiceURI) {
+      if (listening) {
+        playFromSentence(activeSentence ?? 0, selectedVoice, speed);
       }
-      u.onstart = () => setActiveSentence(i);
-      u.onend = () => {
-        if (i === sentences.length - 1) {
-          setListening(false);
-          setPaused(false);
-          setActiveSentence(null);
-        }
-      };
-      window.speechSynthesis.speak(u);
-    });
+    }
+  }, [selectedVoice, listening, activeSentence, speed, playFromSentence]);
 
-    setListening(true);
-    setPaused(false);
-  };
+  // When another card starts listening: stop this one
+  useEffect(() => {
+    const handleOtherStart = (e: Event) => {
+      const custom = e as CustomEvent<{ id: string }>;
+      if (custom.detail?.id !== cardId && listening) {
+        runIdRef.current += 1;
+        setListening(false);
+        setPaused(false);
+        setActiveSentence(null);
+      }
+    };
+    window.addEventListener('ready900-audio-start', handleOtherStart);
+    return () => window.removeEventListener('ready900-audio-start', handleOtherStart);
+  }, [cardId, listening, setActiveSentence, setListening]);
 
-  const togglePause = () => {
+  // Cleanup on unmount
+  useEffect(() => {
+    return () => {
+      if (listening) {
+        runIdRef.current += 1;
+        if (window.speechSynthesis) window.speechSynthesis.cancel();
+      }
+    };
+  }, [listening]);
+
+  const togglePause = useCallback(() => {
     if (!window.speechSynthesis) return;
     if (paused) {
       window.speechSynthesis.resume();
@@ -205,11 +299,15 @@ function ListenControl({
       window.speechSynthesis.pause();
       setPaused(true);
     }
-  };
+  }, [paused]);
 
-  const cycleSpeed = () => {
-    setSpeed((s) => (s === 1 ? 1.2 : s === 1.2 ? 0.8 : 1));
-  };
+  const cycleSpeed = useCallback(() => {
+    const nextSpeed = speed === 1 ? 1.2 : speed === 1.2 ? 0.8 : 1;
+    setSpeed(nextSpeed);
+    if (listening) {
+      playFromSentence(activeSentence ?? 0, selectedVoice, nextSpeed);
+    }
+  }, [speed, listening, playFromSentence, activeSentence, selectedVoice]);
 
   return (
     <div className="flex flex-wrap items-center gap-1.5">
@@ -233,7 +331,6 @@ function ListenControl({
           {speed}x
         </button>
       )}
-      
     </div>
   );
 }

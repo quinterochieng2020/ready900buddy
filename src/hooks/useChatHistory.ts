@@ -1,8 +1,9 @@
 import { useCallback, useEffect, useState } from 'react';
-import type { BuddyLanguage, BuddyMode, ChatTurn } from '@/api/types';
+import type { BuddyLanguage, BuddyMode, BuddyReply, ChatTurn } from '@/api/types';
 
 const SESSION_KEY = 'ready900-session-id';
 const HISTORY_KEY = 'ready900-chat-history';
+const REPLIES_KEY = 'ready900-chat-replies';
 const CONV_KEY = 'ready900-conversation-id';
 const MODE_KEY = 'ready900-mode';
 const LANG_KEY = 'ready900-language';
@@ -26,6 +27,14 @@ export function useChatHistory() {
     try {
       const raw = localStorage.getItem(HISTORY_KEY);
       return raw ? (JSON.parse(raw) as ChatTurn[]) : [];
+    } catch {
+      return [];
+    }
+  });
+  const [replies, setReplies] = useState<BuddyReply[]>(() => {
+    try {
+      const raw = localStorage.getItem(REPLIES_KEY);
+      return raw ? (JSON.parse(raw) as BuddyReply[]) : [];
     } catch {
       return [];
     }
@@ -62,6 +71,14 @@ export function useChatHistory() {
 
   useEffect(() => {
     try {
+      localStorage.setItem(REPLIES_KEY, JSON.stringify(replies.slice(-MAX_HISTORY)));
+    } catch {
+      // ignore
+    }
+  }, [replies]);
+
+  useEffect(() => {
+    try {
       if (conversationId) localStorage.setItem(CONV_KEY, conversationId);
       else localStorage.removeItem(CONV_KEY);
     } catch {
@@ -89,21 +106,29 @@ export function useChatHistory() {
     setHistory((h) => [...h, turn]);
   }, []);
 
+  const addReply = useCallback((reply: BuddyReply) => {
+    setReplies((r) => [...r, reply]);
+  }, []);
+
   const setMode = useCallback((m: BuddyMode) => setModeState(m), []);
   const setLanguage = useCallback((l: BuddyLanguage) => setLanguageState(l), []);
 
   const newChat = useCallback(() => {
     setHistory([]);
+    setReplies([]);
     setConversationId(undefined);
   }, []);
 
   return {
     sessionId,
     history,
+    replies,
     conversationId,
     mode,
     language,
     addTurn,
+    addReply,
+    setReplies,
     setConversationId,
     setMode,
     setLanguage,

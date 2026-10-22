@@ -11,8 +11,8 @@ Built for the **Vibe Coding Hackathon: AZ-900 Exam Prep Edition**, track: **AI S
 
 | | |
 |---|---|
-| Live app | `TODO: https://your-app.onrender.com` |
-| API health check | `TODO: https://your-api.onrender.com/health` |
+| Live app | https://ready900buddy.onrender.com/ |
+| API health check | https://ready900buddyapi.onrender.com/health |
 | Demo video | `TODO: link` |
 
 > Free Render services sleep when idle, so the first request can take about a minute. Open the app a few minutes before trying it.
@@ -197,25 +197,17 @@ Tip: type `/mock429` in mock mode to preview the rate-limit banner.
 1. Build command: `npm install && npm run build`, publish directory: `dist`.
 2. Set `VITE_USE_MOCK=false` and `VITE_API_URL=https://<your-api>.onrender.com`, then redeploy. Vite reads these at build time.
 
-## Evaluation
-
-`TODO: results of the evaluation set. Suggested format:`
-
-| # | Question | Mode | Language | Accurate? | Notes |
-|---|---|---|---|---|---|
-| 1 | | | | | |
-
-`TODO: summary line, e.g. "N of M answers judged accurate by a reviewer. Failures and what we changed."`
-
-Language quality is checked by speakers of each language, and siSwati output is flagged as lower quality.
-
 ## How the prompts work
 
-`TODO: briefly describe the prompt design: a system prompt per mode and language, a strict JSON output schema, grounding to the AZ-900 skills outline, the off-topic guard, and the Socratic rules (one question at a time, hint after a wrong answer, confirm and summarise after a correct one).`
+The server builds a system prompt for each request from the selected **mode** and **language**. The same code path handles every provider, so behaviour stays consistent when the API falls back from one LLM to another.
 
-## Screenshots
-
-`TODO: add screenshots (dark mode, light mode, Socratic mode, a non-English reply).`
+- **Strict JSON output.** The model must return JSON only, with no markdown. The fields are `offTopic`, `explanation`, `localExample`, `keyTerms`, `examTrap`, `checkQuestion` and `outlineSection`. The API requests JSON mode from each provider, strips stray code fences, and falls through to the next provider if the output can't be parsed.
+- **Grounded in the AZ-900 skills outline.** Every answer names the outline area it comes from, and the prompt is limited to the public skills outline rather than exam content.
+- **Beginner voice.** Short, plain sentences, with key terms explained beside the term. African examples (load-shedding, mobile money, spaza shops, taxi ranks) are used only when they fit the concept, never forced.
+- **Language handling.** For siSwati, isiZulu and Kiswahili the explanation is written in that language, while Azure technical terms stay in English.
+- **Scope guard.** Questions outside AZ-900 set `offTopic`, and the API returns a friendly `OFF_TOPIC` reply instead of an answer.
+- **Socratic mode.** The server keeps no state, so the model reads the last 6 turns every time. It asks one guiding question at a time and never gives the full answer first. After a wrong attempt it gives a hint, not the answer. After a correct attempt it confirms, summarises in two sentences, then offers a harder follow-up. If the learner says "I don't know" or "just tell me", it explains simply and then asks one check question.
+- **Predictable output.** Low temperature (0.4) and a capped output length.
 
 ## Limitations
 
@@ -223,11 +215,6 @@ Language quality is checked by speakers of each language, and siSwati output is 
 - Text-to-speech depends on the user's device. Kiswahili and isiZulu voices are only available on some browsers and devices, and there is no siSwati voice.
 - The cache and the daily cap are in memory and reset when the server restarts.
 - LLM answers can be wrong. Always check important facts against the official Microsoft Learn AZ-900 study guide.
-
-## Team
-
-- `TODO: name`: backend, API and deployment
-- `TODO: name`: UI testing, evaluation set, language checks and pitch
 
 ## Disclaimer
 
