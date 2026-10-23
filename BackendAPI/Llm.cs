@@ -26,7 +26,8 @@ namespace BackendAPI
             {
                 systemInstruction = new { parts = new[] { new { text = system } } },
                 contents,
-                generationConfig = new { responseMimeType = "application/json", maxOutputTokens = 2500, temperature = 0.4 }
+               generationConfig = new { responseMimeType = "application/json", maxOutputTokens = 2500, temperature = 0.4,
+                         thinkingConfig = new { thinkingBudget = 0 } }
             };
 
             using var req = new HttpRequestMessage(HttpMethod.Post,
@@ -87,7 +88,7 @@ namespace BackendAPI
     {
         static readonly JsonSerializerOptions Json = new() { PropertyNameCaseInsensitive = true };
         static readonly ConcurrentDictionary<string, DateTime> SkipUntil = new();
-        public async Task<ModelOutput> AskAsync(string system, IReadOnlyList<ChatTurn> history, string message, CancellationToken ct)
+        public async Task<ModelOutput> AskAsync(string system, IReadOnlyList<ChatTurn> history, string message, CancellationToken ct, Func<ModelOutput, bool>? accept = null)
         {
             var all = providers.ToList();
             var active = all.Where(p => !SkipUntil.TryGetValue(p.Name, out var u) || u <= DateTime.UtcNow).ToList();
@@ -100,8 +101,10 @@ namespace BackendAPI
                     var raw = await p.CompleteAsync(system, history, message, ct);
                     raw = raw.Trim().TrimStart('`').TrimEnd('`');
                     if (raw.StartsWith("json", StringComparison.OrdinalIgnoreCase)) raw = raw[4..];
-                    return JsonSerializer.Deserialize<ModelOutput>(raw, Json)
-                           ?? throw new JsonException("Empty model output");
+                    var o = JsonSerializer.Deserialize<ModelOutput>(raw, Json)
+                            ?? throw new JsonException("Empty model output");
+                    if (accept is not null && !accept(o)) throw new JsonException("Output rejected by validator");
+                    return o;
                 }
                 catch (Exception ex) when (!ct.IsCancellationRequested)
                 {

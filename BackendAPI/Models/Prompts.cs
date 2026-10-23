@@ -43,11 +43,15 @@
         }
         public static string UserSuffix(string lang) => lang switch
         {
-            "ss" => "\n\n[Reply in siSwati. Azure terms stay in English.]",
-            "zu" => "\n\n[Reply in isiZulu. Azure terms stay in English.]",
-            "sw" => "\n\n[Reply in Kiswahili. Azure terms stay in English.]",
+            "ss" => "\n\n[Reply in siSwati, Latin script only. Azure terms stay in English.]",
+            "zu" => "\n\n[Reply in isiZulu, Latin script only. Azure terms stay in English.]",
+            "sw" => "\n\n[Reply in Kiswahili (Swahili, as spoken in Kenya and Tanzania), Latin script only. Do not use Arabic script. Azure terms stay in English.]",
             _ => ""
         };
+
+        // All supported languages use Latin script; reject Cyrillic/Arabic/Indic/CJK drift.
+        public static bool ScriptOk(string? text) =>
+            string.IsNullOrEmpty(text) || !text.Any(ch => (ch >= '\u0400' && ch <= '\u06FF') || (ch >= '\u0900' && ch <= '\u9FFF'));
         public static string Build(string mode, string lang) => $"{Base}\n\n{ModeRules(mode)}\n\n{LanguageRule(lang)}";
     }
 }
